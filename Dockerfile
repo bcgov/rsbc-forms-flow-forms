@@ -17,13 +17,13 @@ RUN set -x \
 
 # "bcrypt" requires python/make/g++, all must be installed in alpine
 # (note: using pinned versions to ensure immutable build environment)
-RUN apk update && \
-    apk upgrade && \
-    apk add make g++
-
 # At least one buried package dependency is using a `git` path.
 # Hence we need to haul in git.
-RUN apk --update add git
+RUN apk update && \
+    apk upgrade && \
+    apk add make g++ && \
+    apk add git
+
 # Use https to avoid requiring ssh keys for public repos.
 RUN git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
 ## Using an alternative package install location
@@ -53,7 +53,8 @@ ENV PATH /app/node_modules/.bin:$PATH
 COPY package-lock.json /app/package-lock.json
 COPY package.json /app/package.json
 
-RUN npm install --production
+RUN npm ci && npm prune --omit=dev
+RUN apk del git
 
 # Set this to inspect more from the application. Examples:
 #   DEBUG=formio:db (see index.js for more)
